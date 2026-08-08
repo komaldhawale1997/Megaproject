@@ -1,0 +1,322 @@
+pipeline {
+
+    agent none
+
+    environment {
+        APP_NAME = "python-app"
+        IMAGE_NAME = "python-app"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        AWS_REGION = "ap-south-1"
+
+        // TODO
+        // Replace with your AWS Account ID
+        AWS_ACCOUNT_ID = "YOUR_AWS_ACCOUNT_ID"
+
+        // TODO
+        // Replace with your ECR Repository Name
+        ECR_REPOSITORY = "python-app"
+    }
+
+    stages {
+
+        stage('Checkout Source Code') {
+            agent { label 'build-agent' }
+
+            steps {
+                echo "Checking out source code..."
+
+                // TODO
+                // After GitHub credentials are added,
+                // use Jenkins Git credentials.
+
+                git branch: 'main',
+                url: 'https://github.com/YOUR_USERNAME/MegaProject.git'
+            }
+        }
+
+        stage('Application Verification') {
+            agent { label 'build-agent' }
+
+            steps {
+                dir('python-app') {
+
+                    sh 'ls -la'
+
+                    sh 'python3 --version'
+
+                    sh 'cat requirements.txt'
+                }
+            }
+        }
+
+        stage('Install Python Dependencies') {
+            agent { label 'build-agent' }
+
+            steps {
+
+                dir('python-app') {
+
+                    sh 'pip3 install -r requirements.txt'
+                }
+
+            }
+        }
+
+        stage('SonarQube Scan') {
+
+            agent { label 'build-agent' }
+
+            steps {
+
+                /*
+                 TODO
+
+                 1. Install Sonar Scanner
+                 2. Configure SonarQube Server
+                 3. Add Sonar Token in Jenkins Credentials
+
+                 withSonarQubeEnv('SonarQube'){
+                     sh 'sonar-scanner'
+                 }
+
+                */
+
+                echo "SonarQube Configuration Pending"
+
+            }
+
+        }
+
+        stage('Trivy File System Scan') {
+
+            agent { label 'build-agent' }
+
+            steps {
+
+                dir('python-app') {
+
+                    sh 'trivy fs .'
+
+                }
+
+            }
+
+        }
+
+        stage('Docker Build') {
+
+            agent { label 'build-agent' }
+
+            steps {
+
+                dir('python-app') {
+
+                    sh '''
+                    docker build \
+                    -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    '''
+
+                }
+
+            }
+
+        }
+
+        stage('Run Docker Container') {
+
+            agent { label 'build-agent' }
+
+            steps {
+
+                sh '''
+                docker rm -f python-app || true
+
+                docker run -d \
+                --name python-app \
+                -p 5000:5000 \
+                ${IMAGE_NAME}:${IMAGE_TAG}
+                '''
+
+            }
+
+        }
+
+        stage('Trivy Image Scan') {
+
+            agent { label 'build-agent' }
+
+            steps {
+
+                sh '''
+                trivy image ${IMAGE_NAME}:${IMAGE_TAG}
+                '''
+
+            }
+
+        }
+
+        stage('Login To Amazon ECR') {
+
+            agent { label 'build-agent' }
+
+            steps {
+
+                /*
+                 TODO
+
+                 Jenkins Credentials
+
+                 aws-access-key
+                 aws-secret-key
+
+                 OR
+
+                 Configure AWS CLI
+
+                */
+
+                echo "AWS Credentials Pending"
+
+            }
+
+        }
+
+        stage('Push Docker Image To Amazon ECR') {
+
+            agent { label 'build-agent' }
+
+            steps {
+
+                /*
+                 TODO
+
+                 docker tag
+
+                 docker push
+
+                */
+
+                echo "ECR Push Pending"
+
+            }
+
+        }
+
+        stage('Deploy To Amazon EKS') {
+
+            agent { label 'deploy-agent' }
+
+            steps {
+
+                /*
+                 TODO
+
+                 1. Create EKS Cluster
+                 2. Create ECR Repository
+                 3. aws eks update-kubeconfig
+                 4. kubectl get nodes
+
+                */
+
+                echo "EKS Pending"
+
+            }
+
+        }
+
+        stage('Helm Deployment') {
+
+            agent { label 'deploy-agent' }
+
+            steps {
+
+                /*
+                 TODO
+
+                 helm install
+
+                 OR
+
+                 helm upgrade --install
+
+                */
+
+                echo "Helm Deployment Pending"
+
+            }
+
+        }
+
+        stage('Monitoring') {
+
+            agent { label 'deploy-agent' }
+
+            steps {
+
+                /*
+                 TODO
+
+                 Prometheus
+
+                 Grafana
+
+                 Verify Metrics
+
+                */
+
+                echo "Monitoring Pending"
+
+            }
+
+        }
+
+        stage('SSL & Route53') {
+
+            agent { label 'deploy-agent' }
+
+            steps {
+
+                /*
+                 TODO
+
+                 ACM Certificate
+
+                 Route53
+
+                 Ingress
+
+                 AWS Load Balancer Controller
+
+                */
+
+                echo "SSL & DNS Pending"
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        always {
+
+            echo "Pipeline Finished"
+
+        }
+
+        success {
+
+            echo "Build Successful"
+
+        }
+
+        failure {
+
+            echo "Build Failed"
+
+        }
+
+    }
+
+}
