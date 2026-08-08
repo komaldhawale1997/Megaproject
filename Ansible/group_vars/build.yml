@@ -1,0 +1,6 @@
+---
+docker_version: "latest"
+terraform_version: "latest"
+ansible_version: "latest"
+maven_version: "3.9.11"
+trivy_version: "latest"
